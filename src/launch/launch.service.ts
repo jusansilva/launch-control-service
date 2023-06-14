@@ -11,13 +11,21 @@ export class LaunchService {
   ) {}
 
   async handleLaunchCreated(data: CreateLaunchEvent) {
+    if (data.type === 'debit') {
+      const balance = await this.getBalanceFull();
+      const balanceAfter = balance - data.value;
+
+      if (balanceAfter > 0) {
+        return 'insufficient funds';
+      }
+    }
+
     const createdLaunch = await this.repositoryLaunch.create({
       date: data.date,
       description: data.description,
       type: data.type,
       value: data.value,
     });
-    console.log(createdLaunch);
     await this.repositoryLaunch.save(createdLaunch);
     return createdLaunch;
   }
@@ -28,7 +36,6 @@ export class LaunchService {
   }
 
   async handleLaunchByToday() {
-    const d = new Date();
     const launchDebit = await this.getLauchByTypeToday('debit');
     const launchCredit = await this.getLauchByTypeToday('credit');
     const debitValue = launchDebit.reduce((acc, curr) => acc + curr.value, 0);
@@ -55,5 +62,25 @@ export class LaunchService {
         ),
       },
     });
+  }
+
+  async getBalanceFull() {
+    const debit = await this.repositoryLaunch.find({
+      where: {
+        type: 'debit',
+      },
+    });
+
+    const credit = await this.repositoryLaunch.find({
+      where: {
+        type: 'credit',
+      },
+    });
+
+    const debitValue = debit.reduce((acc, curr) => acc + curr.value, 0);
+
+    const creditValue = credit.reduce((acc, curr) => acc + curr.value, 0);
+
+    return creditValue - debitValue;
   }
 }

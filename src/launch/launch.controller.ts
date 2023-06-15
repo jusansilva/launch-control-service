@@ -18,7 +18,7 @@ export class LaunchController {
   }
 
   @MessagePattern({ cmd: 'find_launch_by_today' })
-  handleFindbyMonth() {
+  handleFindbyToday() {
     return this.service.handleLaunchByToday();
   }
 }

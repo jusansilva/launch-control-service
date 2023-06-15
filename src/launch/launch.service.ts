@@ -13,10 +13,16 @@ export class LaunchService {
   async handleLaunchCreated(data: CreateLaunchEvent) {
     if (data.type === 'debit') {
       const balance = await this.getBalanceFull();
+      console.log();
       const balanceAfter = balance - data.value;
 
-      if (balanceAfter > 0) {
-        return 'insufficient funds';
+      if (balanceAfter < 0) {
+        return {
+          error: true,
+          found: balance,
+          debit: data.value,
+          message: 'insufficient funds',
+        };
       }
     }
 
